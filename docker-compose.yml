@@ -1,0 +1,10 @@
+services:
+  thermal:
+    image: thermal
+    build: .
+    environment:
+      - EDINET_TAXONOMY_DIR
+    volumes:
+      - .:/app
+    stdin_open: true
+    tty: true
