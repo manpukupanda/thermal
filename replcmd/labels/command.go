@@ -3,8 +3,6 @@ package labels
 import (
 	"flag"
 	"fmt"
-	"log"
-	"os"
 	"strings"
 	"thermal/model"
 	"thermal/parser"
@@ -21,7 +19,7 @@ func New() *LabelsCommand {
 }
 
 func parseArgs(args string) (string, string, bool, error) {
-	fs := flag.NewFlagSet("elements", flag.ContinueOnError)
+	fs := flag.NewFlagSet("labels", flag.ContinueOnError)
 	el := fs.String("e", "", "Pattern to match element names (* = any string)")
 	tx := fs.String("t", "", "Pattern to match labels (* = any string)")
 	ls := fs.Bool("l", false, "List labels only")
@@ -52,13 +50,13 @@ func (c *LabelsCommand) Execute(s *session.Session, args string) {
 
 	elPattern, txPattern, ls, err := parseArgs(args)
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(s.Stderr, "error:", err)
 		return
 	}
 
 	grouped, err := resolver.TraverseLabelLink(s.Schema)
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(s.Stderr, "error:", err)
 		return
 	}
 
@@ -98,14 +96,14 @@ func (c *LabelsCommand) Execute(s *session.Session, args string) {
 	}
 	if ls {
 		for _, outputLabel := range outputLabels {
-			fmt.Println(outputLabel.Value)
+			fmt.Fprintln(s.Stdout, outputLabel.Value)
 		}
 	} else {
-		encoder := yaml.NewEncoder(os.Stdout)
+		encoder := yaml.NewEncoder(s.Stdout)
 		encoder.SetIndent(2) // 読みやすさのためにインデント設定
 
 		if err := encoder.Encode(outputLabels); err != nil {
-			log.Fatalf("YAML encode error: %v", err)
+			fmt.Fprintf(s.Stderr, "YAML encode error: %v\n", err)
 		}
 	}
 }

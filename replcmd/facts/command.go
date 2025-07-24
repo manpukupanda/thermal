@@ -2,8 +2,6 @@ package facts
 
 import (
 	"fmt"
-	"log"
-	"os"
 	"strings"
 	"thermal/session"
 	"unicode/utf8"
@@ -47,13 +45,13 @@ func (c *FactsCommand) Execute(s *session.Session, args string) {
 		return
 	}
 
-	var outputFacts []OutputFact
+	outputFacts := make([]OutputFact, len(s.Instance.Facts))
 
-	for _, fact := range s.Instance.Facts {
+	for i, fact := range s.Instance.Facts {
 
 		val := sanitizeLongValue(fact.Value)
 		name := fmt.Sprintf("{%s}%s", fact.XMLName.Space, fact.XMLName.Local)
-		outputFacts = append(outputFacts, OutputFact{
+		outputFacts[i] = OutputFact{
 			Element:    name,
 			ContextRef: fact.ContextRef,
 			UnitRef:    fact.UnitRef,
@@ -61,13 +59,13 @@ func (c *FactsCommand) Execute(s *session.Session, args string) {
 			Nil:        fact.Nil,
 			Length:     utf8.RuneCountInString(fact.Value),
 			Value:      val,
-		})
+		}
 	}
 
-	encoder := yaml.NewEncoder(os.Stdout)
+	encoder := yaml.NewEncoder(s.Stdout)
 	encoder.SetIndent(2) // 読みやすさのためにインデント設定
 
 	if err := encoder.Encode(outputFacts); err != nil {
-		log.Fatalf("YAML encode error: %v", err)
+		fmt.Fprintf(s.Stderr, "YAML encode error: %v\n", err)
 	}
 }

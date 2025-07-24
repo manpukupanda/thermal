@@ -8,26 +8,38 @@ import (
 	"strings"
 	"thermal/replcmd/registry"
 	"thermal/session"
+
+	"golang.org/x/term"
 )
 
 func Start(s *session.Session) {
-	fmt.Println("REPL started. Type 'exit' to quit.")
+	// 対話モードか判定
+	isTerminal := term.IsTerminal(int(os.Stdin.Fd()))
+	if isTerminal {
+		fmt.Fprintln(s.Stdout, "thermal started. Type 'exit' to quit.")
+	}
 
 	reader := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Print(">>> ")
+		if isTerminal {
+			fmt.Fprint(s.Stdout, ">>> ")
+		}
 		input, err := reader.ReadString('\n')
 		if err == io.EOF {
-			fmt.Println("\nbye") // Ctrl+D で退出
+			if isTerminal {
+				fmt.Fprintln(s.Stdout, "\nbye")
+			}
 			break
 		} else if err != nil {
-			fmt.Println("input error:", err)
+			fmt.Fprintln(s.Stderr, "input error:", err)
 			continue
 		}
 
 		input = strings.TrimSpace(input)
 		if input == "exit" {
-			fmt.Println("bye")
+			if isTerminal {
+				fmt.Fprintln(s.Stdout, "bye")
+			}
 			break
 		}
 

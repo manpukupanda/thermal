@@ -3,8 +3,6 @@ package roletypes
 import (
 	"flag"
 	"fmt"
-	"log"
-	"os"
 	"sort"
 	"strings"
 	"thermal/model"
@@ -43,7 +41,7 @@ func (c *RoleTypesCommand) Execute(s *session.Session, args string) {
 
 	rtPattern, ls, err := parseArgs(args)
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(s.Stderr, "error:", err)
 		return
 	}
 
@@ -52,7 +50,7 @@ func (c *RoleTypesCommand) Execute(s *session.Session, args string) {
 
 	grouped, err := resolver.TraverseGenericLink(s.Schema, allRoleTypes)
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(s.Stderr, "error:", err)
 		return
 	}
 
@@ -66,7 +64,7 @@ func (c *RoleTypesCommand) Execute(s *session.Session, args string) {
 
 	// ロールタイプのフィルタ指定があり、マッチしたのがなかったらエラー
 	if rtPattern != "" && len(hrefs) == 0 {
-		fmt.Printf("roleType not found. %s \n", rtPattern)
+		fmt.Fprintf(s.Stdout, "roleType not found. %s \n", rtPattern)
 		return
 	}
 
@@ -74,12 +72,12 @@ func (c *RoleTypesCommand) Execute(s *session.Session, args string) {
 
 	if ls {
 		for _, href := range hrefs {
-			fmt.Println(allRoleTypes[href].RoleURI)
+			fmt.Fprintln(s.Stdout, allRoleTypes[href].RoleURI)
 		}
 	} else {
 
 		outputRoleTypes := make([]OutputRoleType, len(hrefs))
-		for _, href := range hrefs {
+		for i, href := range hrefs {
 			var rt OutputRoleType
 
 			rt.RoleURI = allRoleTypes[href].RoleURI
@@ -97,13 +95,13 @@ func (c *RoleTypesCommand) Execute(s *session.Session, args string) {
 				rt.UsedOn = append(rt.UsedOn, usedOn.Value)
 			}
 			rt.Href = href
-			outputRoleTypes = append(outputRoleTypes, rt)
+			outputRoleTypes[i] = rt
 		}
 
-		encoder := yaml.NewEncoder(os.Stdout)
+		encoder := yaml.NewEncoder(s.Stdout)
 		encoder.SetIndent(2) // 読みやすさのためにインデント設定
 		if err := encoder.Encode(outputRoleTypes); err != nil {
-			log.Fatalf("YAML encode error: %v", err)
+			fmt.Fprintf(s.Stderr, "YAML encode error: %v\n", err)
 		}
 	}
 }

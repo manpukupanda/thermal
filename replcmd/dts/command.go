@@ -2,7 +2,6 @@ package dts
 
 import (
 	"fmt"
-	"os"
 	"thermal/model"
 	"thermal/session"
 
@@ -24,8 +23,8 @@ func (c *DtsCommand) Execute(s *session.Session, args string) {
 	} else if s.Schema != nil {
 		root = schemaTree(s.Schema)
 	}
-	if err := gtree.OutputFromRoot(os.Stdout, root); err != nil {
-		fmt.Println("error:", err)
+	if err := gtree.OutputFromRoot(s.Stdout, root); err != nil {
+		fmt.Fprintln(s.Stderr, "error:", err)
 	}
 }
 

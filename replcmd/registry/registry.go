@@ -49,6 +49,6 @@ func Execute(input string, s *session.Session) {
 	if c, ok := commandMap[cmd]; ok {
 		c.Execute(s, args)
 	} else {
-		fmt.Println("Unknown command:", cmd)
+		fmt.Fprintln(s.Stderr, "Unknown command:", cmd)
 	}
 }

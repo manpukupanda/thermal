@@ -3,8 +3,6 @@ package elements
 import (
 	"flag"
 	"fmt"
-	"log"
-	"os"
 	"sort"
 	"strings"
 	"thermal/model"
@@ -52,13 +50,13 @@ func (c *ElementsCommand) Execute(s *session.Session, args string) {
 
 	elPattern, ls, err := parseArgs(args)
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(s.Stderr, "error:", err)
 		return
 	}
 
 	elements, err := schemaTree(s.Schema)
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(s.Stderr, "error:", err)
 		return
 	}
 
@@ -85,14 +83,14 @@ func (c *ElementsCommand) Execute(s *session.Session, args string) {
 	}
 	if ls {
 		for _, outputElement := range outputElements {
-			fmt.Println(outputElement.Name)
+			fmt.Fprintln(s.Stdout, outputElement.Name)
 		}
 	} else {
-		encoder := yaml.NewEncoder(os.Stdout)
+		encoder := yaml.NewEncoder(s.Stdout)
 		encoder.SetIndent(2) // 読みやすさのためにインデント設定
 
 		if err := encoder.Encode(outputElements); err != nil {
-			log.Fatalf("YAML encode error: %v", err)
+			fmt.Fprintf(s.Stderr, "YAML encode error: %v\n", err)
 		}
 	}
 }
@@ -118,8 +116,6 @@ func traverse(schema *model.XBRLSchema, elements *[]*model.XMLElement, visited m
 	for i := range schema.Elements {
 		*elements = append(*elements, &schema.Elements[i])
 	}
-
-	//	*elements = append(*elements, schema.Elements...)
 
 	for i := range schema.Imports {
 		s := schema.Imports[i].Schema

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"log"
 	"maps"
 	"os"
 	"sort"
@@ -26,7 +25,7 @@ func New() *DefinitionsCommand {
 }
 
 func parseArgs(args string) (string, bool, error) {
-	fs := flag.NewFlagSet("presentationlinks", flag.ContinueOnError)
+	fs := flag.NewFlagSet("definitions", flag.ContinueOnError)
 	rt := fs.String("r", "", "Pattern to match role type URIs (* = any string)")
 	ls := fs.Bool("l", false, "List role type URIs only")
 
@@ -52,13 +51,13 @@ func (c *DefinitionsCommand) Execute(s *session.Session, args string) {
 
 	rtPattern, ls, err := parseArgs(args)
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(s.Stderr, "error:", err)
 		return
 	}
 
 	grouped, err := resolver.TraverseDefinitionLink(s.Schema)
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Fprintln(s.Stderr, "error:", err)
 		return
 	}
 
@@ -72,7 +71,7 @@ func (c *DefinitionsCommand) Execute(s *session.Session, args string) {
 
 	// ロールタイプのフィルタ指定があり、マッチしたのがなかったらエラー
 	if rtPattern != "" && len(arcRoles) == 0 {
-		fmt.Printf("roleType not found. %s \n", rtPattern)
+		fmt.Fprintf(s.Stdout, "roleType not found. %s \n", rtPattern)
 		return
 	}
 
@@ -80,7 +79,7 @@ func (c *DefinitionsCommand) Execute(s *session.Session, args string) {
 
 	if ls {
 		for _, arcRole := range arcRoles {
-			fmt.Println(arcRole)
+			fmt.Fprintln(s.Stdout, arcRole)
 		}
 	} else {
 		var outputElements []OutputDefinitionLink
@@ -98,7 +97,7 @@ func (c *DefinitionsCommand) Execute(s *session.Session, args string) {
 
 				var buf bytes.Buffer
 				if err := gtree.OutputFromRoot(&buf, groot); err != nil {
-					fmt.Println("error:", err)
+					fmt.Fprintln(s.Stderr, "error:", err)
 					return
 				}
 				trees = append(trees, buf.String())
@@ -112,7 +111,7 @@ func (c *DefinitionsCommand) Execute(s *session.Session, args string) {
 		encoder.SetIndent(2) // 読みやすさのためにインデント設定
 
 		if err := encoder.Encode(outputElements); err != nil {
-			log.Fatalf("YAML encode error: %v", err)
+			fmt.Fprintf(s.Stderr, "YAML encode error: %v\n", err)
 		}
 	}
 }
