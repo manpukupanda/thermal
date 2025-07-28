@@ -25,6 +25,7 @@ type SchemaRef struct {
 // roleRefタグ
 type RoleRef struct {
 	RoleURI string `xml:"roleURI,attr"`
+	Href    string `xml:"href,attr"`
 }
 
 // コンテキスト情報

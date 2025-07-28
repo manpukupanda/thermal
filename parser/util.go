@@ -43,7 +43,7 @@ func GetXMLReader(filename string) (*bytes.Reader, error) {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != http.StatusOK {
-			return nil, fmt.Errorf("❌ HTTPレスポンスエラー: %d", resp.StatusCode)
+			return nil, fmt.Errorf("❌ HTTPレスポンスエラー: %d %s", resp.StatusCode, filename)
 		}
 		data, err = io.ReadAll(resp.Body)
 		if err != nil {

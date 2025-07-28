@@ -176,7 +176,7 @@ func ParseInstance(instanceFile string) (*model.XBRLInstance, error) {
 	// インスタンスの解析
 	xbrlInstance, err := ParseXML[model.XBRLInstance](instanceFile)
 	if err != nil {
-		return nil, fmt.Errorf("❌ XBRLインスタンスのパースに失敗:%b", err)
+		return nil, fmt.Errorf("❌ XBRLインスタンスのパースに失敗:%v", err)
 	}
 	xbrlInstance.Path = instanceFile
 
@@ -193,7 +193,7 @@ func ParseInstance(instanceFile string) (*model.XBRLInstance, error) {
 	// スキーマの解析
 	schema, err := ParseSchema(schemaFile, visited)
 	if err != nil {
-		return nil, fmt.Errorf("❌ スキーマのパースに失敗:%b", err)
+		return nil, fmt.Errorf("❌ スキーマのパースに失敗:%v", err)
 	}
 	xbrlInstance.SchemaRefs.Schema = schema
 	return xbrlInstance, nil
