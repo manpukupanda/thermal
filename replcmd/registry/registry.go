@@ -3,6 +3,7 @@ package registry
 import (
 	"fmt"
 	"strings"
+	"thermal/replcmd/contexts"
 	"thermal/replcmd/definitions"
 	"thermal/replcmd/dts"
 	"thermal/replcmd/elements"
@@ -23,6 +24,7 @@ var commandMap = map[string]Command{}
 func RegisterAll() {
 	commandMap["elements"] = elements.New()
 	commandMap["facts"] = facts.New()
+	commandMap["contexts"] = contexts.New()
 	commandMap["labels"] = labels.New()
 	commandMap["references"] = references.New()
 	commandMap["presentations"] = presentations.New()
@@ -37,6 +39,7 @@ func RegisterAll() {
 	commandMap["el"] = commandMap["elements"]
 	commandMap["lb"] = commandMap["labels"]
 	commandMap["rf"] = commandMap["references"]
+	commandMap["cx"] = commandMap["contexts"]
 }
 
 func Execute(input string, s *session.Session) {
