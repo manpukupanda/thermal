@@ -1,8 +1,10 @@
 package facts
 
 import (
+	"flag"
 	"fmt"
 	"strings"
+	"thermal/parser"
 	"thermal/session"
 	"unicode/utf8"
 
@@ -13,6 +15,23 @@ type FactsCommand struct{}
 
 func New() *FactsCommand {
 	return &FactsCommand{}
+}
+
+func parseArgs(args string) (string, error) {
+	fs := flag.NewFlagSet("facts", flag.ContinueOnError)
+	el := fs.String("e", "", "Pattern to match element names (* = any string)")
+
+	argv := strings.Fields(args)
+
+	if err := fs.Parse(argv); err != nil {
+		return "", err
+	}
+
+	if fs.NArg() > 0 {
+		return "", fmt.Errorf("unknown parameter: %v", fs.Args())
+	}
+
+	return *el, nil
 }
 
 func sanitizeLongValue(input string) string {
@@ -45,13 +64,22 @@ func (c *FactsCommand) Execute(s *session.Session, args string) {
 		return
 	}
 
-	outputFacts := make([]OutputFact, len(s.Instance.Facts))
+	elPattern, err := parseArgs(args)
+	if err != nil {
+		fmt.Fprintln(s.Stderr, "error:", err)
+		return
+	}
 
-	for i, fact := range s.Instance.Facts {
+	var outputFacts []OutputFact
+
+	for _, fact := range s.Instance.Facts {
+		if elPattern != "" && !parser.WildcardMatch(elPattern, fact.XMLName.Local) {
+			continue
+		}
 
 		val := sanitizeLongValue(fact.Value)
 		name := fmt.Sprintf("{%s}%s", fact.XMLName.Space, fact.XMLName.Local)
-		outputFacts[i] = OutputFact{
+		outFact := OutputFact{
 			Element:    name,
 			ContextRef: fact.ContextRef,
 			UnitRef:    fact.UnitRef,
@@ -60,6 +88,7 @@ func (c *FactsCommand) Execute(s *session.Session, args string) {
 			Length:     utf8.RuneCountInString(fact.Value),
 			Value:      val,
 		}
+		outputFacts = append(outputFacts, outFact)
 	}
 
 	encoder := yaml.NewEncoder(s.Stdout)
