@@ -21,6 +21,7 @@ func main() {
 	var session session.Session
 	// 対話モードか判定し、出力先を設定
 	isTerminal := term.IsTerminal(int(os.Stdin.Fd()))
+	session.Stdin = os.Stdin
 	session.Stdout = os.Stdout
 	if isTerminal {
 		session.Stderr = os.Stdout

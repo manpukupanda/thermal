@@ -5,6 +5,7 @@ go 1.24
 require (
 	github.com/antchfx/xmlquery v1.4.4 // indirect
 	github.com/antchfx/xpath v1.3.4 // indirect
+	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/ddddddO/gtree v1.11.7 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/goccy/go-yaml v1.17.1 // indirect

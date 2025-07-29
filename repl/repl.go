@@ -5,30 +5,53 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 	"thermal/replcmd/registry"
 	"thermal/session"
 
+	"github.com/chzyer/readline"
 	"golang.org/x/term"
 )
 
 func Start(s *session.Session) {
-	// 対話モードか判定
-	isTerminal := term.IsTerminal(int(os.Stdin.Fd()))
-	if isTerminal {
-		fmt.Fprintln(s.Stdout, "thermal started. Type 'exit' to quit.")
+	if term.IsTerminal(int(os.Stdin.Fd())) {
+		startInteractive(s)
+	} else {
+		startNonInteractive(s)
 	}
+}
 
-	reader := bufio.NewReader(os.Stdin)
+// 終了コマンド
+var exitCommands = []string{"exit", "quit", "bye"}
+
+func startInteractive(s *session.Session) {
+	historyPath := filepath.Join(os.TempDir(), "thermal_history.tmp")
+
+	rl, err := readline.NewEx(&readline.Config{
+		Prompt:          "> ",
+		HistoryFile:     historyPath,
+		InterruptPrompt: "^C",
+		EOFPrompt:       "bye",
+		Stdin:           io.NopCloser(s.Stdin),
+		Stdout:          s.Stdout,
+		Stderr:          s.Stderr,
+	})
+	if err != nil {
+		fmt.Fprintln(s.Stderr, "readline init error:", err)
+		return
+	}
+	defer rl.Close()
+
+	fmt.Fprintln(s.Stdout, "thermal started. Type 'exit' to quit.")
+
 	for {
-		if isTerminal {
-			fmt.Fprint(s.Stdout, ">>> ")
-		}
-		input, err := reader.ReadString('\n')
-		if err == io.EOF {
-			if isTerminal {
-				fmt.Fprintln(s.Stdout, "\nbye")
-			}
+		input, err := rl.Readline()
+		if err == readline.ErrInterrupt {
+			continue
+		} else if err == io.EOF {
+			fmt.Fprintln(s.Stdout, rl.Config.EOFPrompt)
 			break
 		} else if err != nil {
 			fmt.Fprintln(s.Stderr, "input error:", err)
@@ -36,10 +59,29 @@ func Start(s *session.Session) {
 		}
 
 		input = strings.TrimSpace(input)
-		if input == "exit" {
-			if isTerminal {
-				fmt.Fprintln(s.Stdout, "bye")
-			}
+
+		if slices.Contains(exitCommands, input) {
+			fmt.Fprintln(s.Stdout, rl.Config.EOFPrompt)
+			break
+		}
+
+		registry.Execute(input, s)
+	}
+}
+
+func startNonInteractive(s *session.Session) {
+	reader := bufio.NewReader(s.Stdin)
+	for {
+		input, err := reader.ReadString('\n')
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			fmt.Fprintln(s.Stderr, "input error:", err)
+			continue
+		}
+
+		input = strings.TrimSpace(input)
+		if slices.Contains(exitCommands, input) {
 			break
 		}
 
