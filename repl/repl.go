@@ -44,6 +44,22 @@ func startInteractive(s *session.Session) {
 	}
 	defer rl.Close()
 
+	if s.Manifest != nil {
+		fmt.Fprintln(s.Stdout, "[manifest]")
+		fmt.Fprintln(s.Stdout, "*", s.Manifest.Path)
+	}
+	if s.Instance != nil {
+		fmt.Fprintln(s.Stdout, "[instance(s)]")
+		for _, instance := range s.Manifest.List.XBRLInstances {
+			prefix := " "
+			if instance.Path == s.Instance.Path {
+				prefix = "*"
+			}
+			msg := fmt.Sprintf("%s %s", prefix, instance.Path)
+			fmt.Fprintln(s.Stdout, msg)
+		}
+	}
+	fmt.Fprintln(s.Stdout, "")
 	fmt.Fprintln(s.Stdout, "thermal started. Type 'exit' to quit.")
 
 	for {

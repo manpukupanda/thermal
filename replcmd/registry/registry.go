@@ -8,6 +8,7 @@ import (
 	"thermal/replcmd/dts"
 	"thermal/replcmd/elements"
 	"thermal/replcmd/facts"
+	"thermal/replcmd/instances"
 	"thermal/replcmd/labels"
 	"thermal/replcmd/presentations"
 	"thermal/replcmd/references"
@@ -31,6 +32,7 @@ func RegisterAll() {
 	commandMap["definitions"] = definitions.New()
 	commandMap["dts"] = dts.New()
 	commandMap["roletypes"] = roletypes.New()
+	commandMap["instances"] = instances.New()
 
 	// エイリアス
 	commandMap["pr"] = commandMap["presentations"]
@@ -40,6 +42,7 @@ func RegisterAll() {
 	commandMap["lb"] = commandMap["labels"]
 	commandMap["rf"] = commandMap["references"]
 	commandMap["cx"] = commandMap["contexts"]
+	commandMap["in"] = commandMap["instances"]
 }
 
 func Execute(input string, s *session.Session) {
